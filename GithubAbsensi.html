@@ -3,90 +3,331 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Attendance Executive Showcase</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>GA DSM — Executive Attendance Showcase</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; padding: 20px; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #334155; padding-bottom: 15px; }
-    .header h1 { font-size: 24px; color: #38bdf8; }
-    .status-badge { background: #0284c7; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+    body { background-color: #090d16; color: #f8fafc; padding: 25px; font-size: 14px; min-height: 100vh; }
     
-    /* Grid KPI Cards */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
-    .kpi-card { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
-    .kpi-card h3 { font-size: 13px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; }
-    .kpi-card .number { font-size: 32px; font-weight: bold; }
-    .c-total { color: #f8fafc; }
-    .c-checkin { color: #4ade80; }
-    .c-telat { color: #facc15; }
-    .c-nocheckin { color: #f87171; }
+    .container { max-width: 1050px; margin: 0 auto; }
+    
+    /* Top Timestamp */
+    .timestamp-bar { text-align: right; font-weight: 700; font-size: 15px; margin-bottom: 20px; color: #38bdf8; letter-spacing: 0.5px; }
+    
+    /* Main KPI Table - Sleek Dark Theme */
+    .kpi-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; border: 1px solid #334155; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); }
+    .kpi-table th { background-color: #1e293b; color: #f8fafc; font-weight: 700; font-size: 13px; text-transform: uppercase; padding: 12px 8px; text-align: center; border: 1px solid #334155; letter-spacing: 0.5px; }
+    .kpi-table td { background-color: #0f172a; color: #ffffff; font-weight: 800; font-size: 18px; padding: 14px 8px; text-align: center; border: 1px solid #334155; }
+    
+    /* Grid for Tables Below */
+    .sections-grid { display: grid; grid-template-columns: 1fr; gap: 30px; }
 
-    /* Chart Container */
-    .chart-container { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; }
+    /* Late Section */
+    .late-section { background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; }
+    .late-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #facc15; text-transform: uppercase; letter-spacing: 0.5px; }
+    .late-divider { width: 100%; border-bottom: 2px solid #334155; margin-bottom: 12px; }
+
+    .late-table { width: 100%; max-width: 450px; border-collapse: collapse; }
+    .late-table td { padding: 6px 10px; font-size: 14px; vertical-align: middle; color: #e2e8f0; }
+    .late-table td.col-no { width: 35px; text-align: right; color: #94a3b8; font-weight: 600; }
+    .late-table td.col-name { font-weight: 700; color: #ffffff; padding-left: 12px; }
+    .late-table td.col-status { text-align: center; color: #facc15; font-weight: 600; }
+    .late-table td.col-time { text-align: right; font-family: 'Consolas', 'Courier New', monospace; font-weight: 700; color: #38bdf8; }
+
+    /* Last 15 Table Section - Blue Highlight Header */
+    .last15-section { background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; margin-top: 10px; }
+    .last15-title { font-size: 14px; font-weight: 800; background-color: #1e3a8a; color: #ffffff; padding: 10px 14px; border-radius: 6px 6px 0 0; border: 1px solid #2563eb; letter-spacing: 0.5px; }
+
+    .last15-table { width: 100%; border-collapse: collapse; border: 1px solid #1e293b; }
+    .last15-table th { background-color: #1e293b; color: #94a3b8; font-size: 12px; text-transform: uppercase; padding: 10px; border: 1px solid #334155; text-align: left; }
+    .last15-table td { padding: 8px 10px; font-size: 13px; border: 1px solid #1e293b; color: #cbd5e1; }
+    .last15-table tr:nth-child(even) { background-color: #141e33; }
+    .last15-table tr:hover { background-color: #1e293b; }
+    .col-center { text-align: center; }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>GA DSM — Attendance Live Showcase</h1>
-    <span class="status-badge" id="lastUpdate">Syncing...</span>
-  </div>
+  <div class="container">
+    <!-- TIMESTAMP TOP RIGHT -->
+    <div class="timestamp-bar" id="timestampBar">Syncing...</div>
 
-  <!-- KPI CARDS -->
-  <div class="kpi-grid">
-    <div class="kpi-card"><h3>Total Karyawan</h3><div class="number c-total" id="kpiTotal">59</div></div>
-    <div class="kpi-card"><h3>Check In</h3><div class="number c-checkin" id="kpiCheckIn">46</div></div>
-    <div class="kpi-card"><h3>Telat</h3><div class="number c-telat" id="kpiTelat">6</div></div>
-    <div class="kpi-card"><h3>No Check In</h3><div class="number c-nocheckin" id="kpiNoCheckIn">13</div></div>
-  </div>
+    <!-- MAIN KPI SUMMARY TABLE -->
+    <table class="kpi-table">
+      <thead>
+        <tr>
+          <th>TOTAL KARYAWAN</th>
+          <th>TELAT</th>
+          <th>SAKIT</th>
+          <th>IJIN</th>
+          <th>ALPHA</th>
+          <th>DINAS LUAR</th>
+          <th>CHECK IN</th>
+          <th>NO CHECK IN</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="kpiTotal" style="color:#38bdf8;">0</td>
+          <td id="kpiTelat" style="color:#facc15;">0</td>
+          <td id="kpiSakit">0</td>
+          <td id="kpiIjin"></td>
+          <td id="kpiAlpha"></td>
+          <td id="kpiDinas" style="color:#a855f7;">0</td>
+          <td id="kpiCheckIn" style="color:#4ade80;">0</td>
+          <td id="kpiNoCheckIn" style="color:#f87171;">0</td>
+        </tr>
+      </tbody>
+    </table>
 
-  <!-- CHART TREND -->
-  <div class="chart-container">
-    <canvas id="attendanceChart" height="100"></canvas>
+    <div class="sections-grid">
+      <!-- LATE MANPOWER SECTION -->
+      <div class="late-section">
+        <div class="late-title">Telat</div>
+        <div class="late-divider"></div>
+        
+        <table class="late-table">
+          <tbody id="lateTableBody">
+            <tr><td colspan="4" style="font-size:12px; color:#64748b;">Loading data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- LAST 15: DINAS LUAR, IJIN, SAKIT, CUTI -->
+      <div class="last15-section">
+        <div class="last15-title">LAST 15 : DINAS LUAR, IJIN, SAKIT, CUTI</div>
+        <table class="last15-table">
+          <thead>
+            <tr>
+              <th style="width:40px;" class="col-center">NO</th>
+              <th>Nama Karyawan</th>
+              <th>Departemen</th>
+              <th>Keterangan</th>
+              <th class="col-center">Date</th>
+              <th class="col-center">Submit Hour</th>
+            </tr>
+          </thead>
+          <tbody id="last15TableBody">
+            <tr><td colspan="6" style="text-align:center; color:#64748b; padding:15px;">Loading data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <script>
-    // URL CSV dari Google Sheets (File -> Share -> Publish to Web -> Format CSV)
-    const PUBLISHED_SHEET_CSV_URL = "URL_PUBLISH_TO_WEB_CSV_COACH_DI_SINI";
+    // =========================================================================
+    // TEMPELKAN TIGA URL CSV (PUBLISH TO WEB) GOOGLE SHEETS COACH DI SINI:
+    // =========================================================================
+    const URL_CSV_SUMMARY     = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRm_gPfcbTHJYfs80Ze7tYGgQJpEstbS1M4raWGDth1ISQqgRzcoUYFxuZ-q2mVyOIzFBxOQ3D0MYLM/pub?output=csv";       // CSV 1: Rekap Harian KPI
+    const URL_CSV_LATE        = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQySUHUMBIRdEsy6RlLkibANwgsd7HDfXtfLmTBfuBJCHI0Y3Y8ASca_jrzodRqKqwBK-xIJ_AKJ0zU/pub?output=csv";         // CSV 2: Daftar MP Telat
+    const URL_CSV_PERMISSIONS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoJsS22lxwIxF1s_v26lB8M0S9BynVbP9hmXPD36g-OYN-fbiNmveLTl-8PX-FlCZTN6ED-eu5OwTM/pub?output=csv"; // CSV 3: Last 15 Ijin/Sakit/DL
 
-    async function loadDashboardData() {
+    async function loadAllShowcaseData() {
       try {
-        // Tarik data CSV langsung dari Google Sheets
-        const response = await fetch(PUBLISHED_SHEET_CSV_URL);
-        const csvText = await response.text();
-        
-        // Parse data sederhana (Atau panggil data statistik langsung)
-        document.getElementById("lastUpdate").innerText = "LIVE • " + new Date().toLocaleTimeString('id-ID');
+        // Fetch 3 CSV sekaligus secara parallel
+        const [resSummary, resLate, resPerm] = await Promise.all([
+          fetch(URL_CSV_SUMMARY),
+          fetch(URL_CSV_LATE),
+          fetch(URL_CSV_PERMISSIONS)
+        ]);
+
+        const csvSummaryText = await resSummary.text();
+        const csvLateText    = await resLate.text();
+        const csvPermText    = await resPerm.text();
+
+        parseSummaryCSV(csvSummaryText);
+        parseLateCSV(csvLateText);
+        parseLast15CSV(csvPermText);
+
       } catch (err) {
-        console.log("Demo Mode / Local Fallback Active");
-        document.getElementById("lastUpdate").innerText = "LIVE DEMO";
+        console.log("Menampilkan Mode Demo / Fallback Dark Data");
+        renderDemoData();
       }
     }
 
-    // Chart.js Setup
-    const ctx = document.getElementById('attendanceChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
-        datasets: [
-          { label: 'Check In', data: [46, 50, 48, 52, 49, 45], backgroundColor: '#22c55e' },
-          { label: 'Telat', data: [6, 3, 5, 2, 4, 1], backgroundColor: '#eab308' },
-          { label: 'No Check In', data: [7, 6, 6, 5, 6, 13], backgroundColor: '#ef4444' }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { labels: { color: '#f8fafc' } } },
-        scales: {
-          x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-          y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+    // --- PARSER CSV 1: SUMMARY KPI ---
+    function parseSummaryCSV(text) {
+      const rows = text.split('\n').map(r => r.split(',').map(c => c.replace(/"/g, '').trim()));
+      
+      if (rows[0] && rows[0][0]) {
+        document.getElementById('timestampBar').innerText = rows[0][0] || getFormattedDate();
+      } else {
+        document.getElementById('timestampBar').innerText = getFormattedDate();
+      }
+
+      for (let i = 0; i < rows.length; i++) {
+        const rowStr = rows[i].join(' ').toUpperCase();
+        if (rowStr.includes('TOTAL KARYAWAN')) {
+          const data = rows[i + 1];
+          if (data) {
+            document.getElementById('kpiTotal').innerText     = data[0] || '0';
+            document.getElementById('kpiTelat').innerText     = data[1] || '0';
+            document.getElementById('kpiSakit').innerText     = data[2] || '0';
+            document.getElementById('kpiIjin').innerText      = data[3] || '';
+            document.getElementById('kpiAlpha').innerText     = data[4] || '';
+            document.getElementById('kpiDinas').innerText     = data[5] || '0';
+            document.getElementById('kpiCheckIn').innerText   = data[6] || '0';
+            document.getElementById('kpiNoCheckIn').innerText = data[7] || '0';
+          }
+          break;
         }
       }
-    });
+    }
 
-    loadDashboardData();
+    // --- PARSER CSV 2: LATE MANPOWER ---
+    function parseLateCSV(text) {
+      const rows = text.split('\n').map(r => r.split(',').map(c => c.replace(/"/g, '').trim())).filter(r => r.length > 1 && r[0] !== "");
+      
+      let html = "";
+      let count = 0;
+      let startIndex = 0;
+      
+      if (rows[0] && (rows[0][0].toLowerCase().includes("nama") || rows[0][0].toLowerCase().includes("no"))) {
+        startIndex = 1;
+      }
+
+      for (let i = startIndex; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row[0]) continue;
+        
+        count++;
+        const name   = row[0] || row[1] || "";
+        const status = row[1] || "Telat";
+        const time   = row[2] || "";
+
+        html += `
+          <tr>
+            <td class="col-no">${count}</td>
+            <td class="col-name">${name}</td>
+            <td class="col-status">${status}</td>
+            <td class="col-time">${time}</td>
+          </tr>
+        `;
+      }
+
+      if (count === 0) {
+        html = `<tr><td colspan="4" style="color:#4ade80; font-weight:bold; padding:10px;">Tidak Ada Yang Telat Hari Ini!</td></tr>`;
+      }
+
+      document.getElementById('lateTableBody').innerHTML = html;
+    }
+
+    // --- PARSER CSV 3: LAST 15 PERMISSIONS ---
+    function parseLast15CSV(text) {
+      const rows = text.split('\n').map(r => r.split(',').map(c => c.replace(/"/g, '').trim())).filter(r => r.length > 1);
+      
+      let html = "";
+      let count = 0;
+      let startIndex = 0;
+
+      if (rows[0] && (rows[0][0].toLowerCase().includes("nama") || rows[0][0].toLowerCase().includes("no"))) {
+        startIndex = 1;
+      }
+
+      for (let i = startIndex; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row[0] && !row[1]) continue;
+
+        count++;
+        const name   = row[1] || row[0] || "Wait for Data";
+        const dept   = row[2] || "Wait for Data";
+        const ket    = row[3] || "Wait for Data";
+        const date   = row[4] || "";
+        const hour   = row[5] || "";
+
+        html += `
+          <tr>
+            <td class="col-center" style="color:#94a3b8;">${count}</td>
+            <td style="font-weight:700; color:#ffffff;">${name}</td>
+            <td style="color:#cbd5e1;">${dept}</td>
+            <td style="color:#a855f7; font-weight:600;">${ket}</td>
+            <td class="col-center">${date}</td>
+            <td class="col-center" style="font-family:monospace; color:#38bdf8;">${hour}</td>
+          </tr>
+        `;
+      }
+
+      if (count === 0) {
+        html = `<tr><td colspan="6" style="text-align:center; color:#64748b; padding:15px;">Belum ada record data izin / dinas luar.</td></tr>`;
+      }
+
+      document.getElementById('last15TableBody').innerHTML = html;
+    }
+
+    function getFormattedDate() {
+      const now = new Date();
+      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      return `${days[now.getDay()]} ${now.getDate()}/${months[now.getMonth()]}/${now.getFullYear()} 00:00`;
+    }
+
+    // Demo Data jika URL CSV belum terhubung
+    function renderDemoData() {
+      document.getElementById('timestampBar').innerText = "Senin 19/Oktober/2026 00:00";
+      document.getElementById('kpiTotal').innerText     = "59";
+      document.getElementById('kpiTelat').innerText     = "6";
+      document.getElementById('kpiSakit').innerText     = "0";
+      document.getElementById('kpiIjin').innerText      = "";
+      document.getElementById('kpiAlpha').innerText     = "";
+      document.getElementById('kpiDinas').innerText     = "0";
+      document.getElementById('kpiCheckIn').innerText   = "46";
+      document.getElementById('kpiNoCheckIn').innerText = "13";
+
+      // Demo Late Table
+      const demoLate = [
+        { name: "Silvia", status: "Telat", time: "8:11:08" },
+        { name: "Lie Andrew Benyam", status: "Telat", time: "8:12:21" },
+        { name: "Diva", status: "Telat", time: "8:12:40" },
+        { name: "Nopi", status: "Telat", time: "8:14:52" },
+        { name: "Willy C", status: "Telat", time: "8:29:04" },
+        { name: "Yudi", status: "Telat", time: "8:38:08" }
+      ];
+      let htmlLate = "";
+      demoLate.forEach((item, idx) => {
+        htmlLate += `
+          <tr>
+            <td class="col-no">${idx + 1}</td>
+            <td class="col-name">${item.name}</td>
+            <td class="col-status">${item.status}</td>
+            <td class="col-time">${item.time}</td>
+          </tr>
+        `;
+      });
+      document.getElementById('lateTableBody').innerHTML = htmlLate;
+
+      // Demo Last 15 Table
+      const demoLast15 = [
+        { name: "Yuly Indriati", dept: "HR GA", ket: "Dinas Luar", date: "Jumat, 16, 10,26", hour: "2:27:03 PM" },
+        { name: "Ricky", dept: "Purchasing", ket: "Dinas Luar", date: "Jumat, 16, 10,26", hour: "8:00:43 AM" },
+        { name: "Charles", dept: "Purchasing", ket: "Dinas Luar", date: "Kamis, 15, 10,26", hour: "7:58:10 PM" }
+      ];
+      
+      let htmlLast15 = "";
+      for (let i = 0; i < 15; i++) {
+        const item = demoLast15[i] || { name: "Wait for Data", dept: "Wait for Data", ket: "Wait for Data", date: "Kamis, 15, 10,26", hour: "10:58:10 AM" };
+        htmlLast15 += `
+          <tr>
+            <td class="col-center" style="color:#94a3b8;">${i + 1}</td>
+            <td style="font-weight:700; color:#ffffff;">${item.name}</td>
+            <td style="color:#cbd5e1;">${item.dept}</td>
+            <td style="color:#a855f7; font-weight:600;">${item.ket}</td>
+            <td class="col-center">${item.date}</td>
+            <td class="col-center" style="font-family:monospace; color:#38bdf8;">${item.hour}</td>
+          </tr>
+        `;
+      }
+      document.getElementById('last15TableBody').innerHTML = htmlLast15;
+    }
+
+    // Eksekusi
+    if (URL_CSV_SUMMARY !== "https://docs.google.com/spreadsheets/d/e/2PACX-1vRm_gPfcbTHJYfs80Ze7tYGgQJpEstbS1M4raWGDth1ISQqgRzcoUYFxuZ-q2mVyOIzFBxOQ3D0MYLM/pub?output=csv" && 
+        URL_CSV_LATE !== "https://docs.google.com/spreadsheets/d/e/2PACX-1vQySUHUMBIRdEsy6RlLkibANwgsd7HDfXtfLmTBfuBJCHI0Y3Y8ASca_jrzodRqKqwBK-xIJ_AKJ0zU/pub?output=csv" && 
+        URL_CSV_PERMISSIONS !== "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoJsS22lxwIxF1s_v26lB8M0S9BynVbP9hmXPD36g-OYN-fbiNmveLTl-8PX-FlCZTN6ED-eu5OwTM/pub?output=csv") {
+      loadAllShowcaseData();
+      setInterval(loadAllShowcaseData, 60000); // Auto Sync tiap 1 menit
+    } else {
+      renderDemoData();
+    }
   </script>
 </body>
 </html>
